@@ -6,9 +6,6 @@ import threading
 from datetime import datetime
 import time
 import sys
-import os
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
 from logger import logger
 from watchdog_monitoring import start_watchdog
 
@@ -31,9 +28,19 @@ def load_bot_token():
     return config['tgm_bots']['SendingTradeSignal_Bot']['tgm_bot_token']
 
 
-def run_bot_polling(signal_bot):
-    """Функция для запуска infinity_polling в отдельном потоке."""
-    while True:
+def run_bot_polling(signal_bot, max_retries=5, base_delay=5):
+    """
+    Функция для запуска infinity_polling в отдельном потоке с обработкой ошибок и ограничением на количество повторных попыток.
+
+    Args:
+        signal_bot (telebot.TeleBot): Экземпляр бота, используемый для polling.
+        max_retries (int): Максимальное количество попыток переподключения.
+        base_delay (int): Начальная задержка перед переподключением, в секундах.
+    """
+    retry_count = 0
+    delay = base_delay
+
+    while retry_count < max_retries:
         try:
             logger.info("Запуск infinity_polling для бота")
             signal_bot.infinity_polling(
@@ -42,11 +49,23 @@ def run_bot_polling(signal_bot):
                 allowed_updates=bot_update_types,
                 skip_pending=False
             )
+            break  # Успешный запуск - выходим из цикла
         except Exception as e:
-            logger.error(f"Ошибка в работе бота: {e}")
-            time.sleep(1)  # Пауза перед повторным запуском
-        else:
-            break  # Выход из цикла при успешном завершении
+            retry_count += 1
+            logger.error(
+                f"Ошибка в работе бота: {e}. Попытка {retry_count} из {max_retries}")
+            if retry_count >= max_retries:
+                logger.error(
+                    "Достигнуто максимальное количество попыток. Бот остановлен.")
+                break
+            # Экспоненциальная задержка с увеличением интервала
+            time.sleep(delay)
+            # Ограничиваем задержку максимум до 60 секунд
+            delay = min(delay * 2, 60)
+
+    if retry_count >= max_retries:
+        logger.error(
+            "Не удалось восстановить соединение. Остановка работы бота.")
 
 
 def run_signal_bot(stop_event, restart_event):
