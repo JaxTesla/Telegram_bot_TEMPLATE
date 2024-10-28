@@ -1,0 +1,23 @@
+.venv\Scripts\activate
+
+
+pyinstaller --onefile update_currency_rates.py
+
+Дополнительные параметры для Windows
+Добавление иконки: Чтобы добавить иконку для исполняемого файла, используйте параметр --icon, указав путь к файлу .ico:
+
+bash
+Копировать код
+pyinstaller --onefile --icon=myicon.ico update_currency_rates.py
+Добавление дополнительных файлов (если скрипт использует их): Например, для добавления файла config.json в корень исполняемого файла:
+
+bash
+Копировать код
+pyinstaller --onefile --add-data "config.json;." update_currency_rates.py
+Для Windows используйте точку с запятой (;) в пути --add-data, а для других систем — двоеточие (:).
+
+Теперь update_currency_rates.py скомпилирован в исполняемый файл update_currency_rates.exe, который можно запускать на Windows.
+
+--noconsole (или эквивалент --windowed): отключает отображение окна консоли при запуске.
+--onefile: создает один исполняемый файл.
+pyinstaller --onefile --windowed update_currency_rates.py
