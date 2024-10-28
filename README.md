@@ -30,7 +30,7 @@
 1. **Клонируйте репозиторий:**
 
    ```bash
-   git clone https://github.com/ваш-логин/ваш-репозиторий.git
+   git clone https://github.com/JaxTesla/TGM_Pattern.git
    cd ваш-репозиторий
    ```
 
